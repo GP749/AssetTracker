@@ -3,7 +3,21 @@
 Local-first tool check-in / check-out for a small team. Runs on your laptop, no cloud. Phones on the same Wi-Fi can scan printed QR codes to check tools out.
 
 ## Stack
-Next.js 16 (App Router) · React 19 · TypeScript · Tailwind v4 · Prisma 7 + SQLite (better-sqlite3 driver adapter) · `html5-qrcode` for scanning · `qrcode` for label generation.
+Next.js 16 (App Router) · React 19 · TypeScript · Tailwind v4 · Prisma 7 + SQLite (better-sqlite3 driver adapter) · `html5-qrcode` for scanning · `qrcode` for label generation · Unsplash API for tool photos (optional).
+
+## Features
+- **Inventory dashboard** with status / category / location filters and full-text search
+- **Member picker** (cookie + localStorage) — no real auth, single-tenant trust
+- **Check-out / return** with optional notes and condition logging
+- **Locations** — track where each tool lives (Shelf A1, Bay 3, Truck…) and filter by it
+- **Maintenance** — mark any tool out of service with a reason, then "mark serviced" to release it
+- **Damage on return** — checkbox routes a damaged tool straight to maintenance with the return note copied as the reason
+- **Overdue tracking** — `OVERDUE_DAYS` env var (default 14); cards and the detail page light up red, dashboard has an "overdue only" filter
+- **Edit + delete tools**, with safety check (can't delete a tool that's currently checked out)
+- **Members CRUD**, with checkout-history protection (members with history can't be deleted to preserve the audit log)
+- **Printable QR labels** at `/tools/[id]/label` with a 60×40mm print stylesheet
+- **Camera scanner** at `/scan` (works on laptop over HTTP, phone requires HTTPS)
+- **Unsplash auto-photo** — when a free API key is set, the seed and "Add tool" form fetch a stock photo by name
 
 ## Requirements
 - Windows 10/11, macOS, or Linux
@@ -20,6 +34,24 @@ npm run dev           # https://localhost:3000 (see HTTPS note below)
 Stop with Ctrl+C.
 
 If you don't need HTTPS yet (laptop-only testing), use `npm run dev:http` to skip the cert generation and serve at `http://localhost:3000`.
+
+### Optional: Unsplash photos
+By default the seed creates tools without photos. To auto-fetch a relevant stock photo for each tool:
+
+1. Go to https://unsplash.com/oauth/applications and create a free developer app (any name and description — no review needed for personal/dev use).
+2. Copy the **Access Key** (not the Secret Key).
+3. Paste it into `.env`:
+   ```
+   UNSPLASH_ACCESS_KEY="your-key-here"
+   ```
+4. Re-seed:
+   ```bash
+   npm run db:seed
+   ```
+
+The "Add tool" form also picks up the key and shows an "Auto-fetch a photo from Unsplash" checkbox.
+
+Free tier allows 50 requests/hour — plenty for seeding and a few manual adds.
 
 ### First-time HTTPS setup (Windows)
 `npm run dev` uses Next.js's `--experimental-https`, which downloads `mkcert` and generates a self-signed cert the first time it runs. **It will trigger a UAC prompt to install a local certificate authority** — you have to accept it in an interactive terminal. After that the cert is reused on every subsequent start.
@@ -89,7 +121,19 @@ There is no real auth in v1. The site header has a "who are you?" dropdown. Pick
 Server actions for check-out / return read the cookie. If no member is selected, the check-out button on the tool page tells you to pick yourself first.
 
 ## Adding a tool
-Header → **Add tool** → fill name + category, optionally upload a photo (JPG/PNG/WEBP/GIF, max 8 MB). Photos land in `public/uploads/<uuid>.<ext>` and the DB stores the relative URL.
+Header → **Add** → fill name + category + location, optionally upload a photo (JPG/PNG/WEBP/GIF, max 8 MB). Photos land in `public/uploads/<uuid>.<ext>` and the DB stores the relative URL. With an Unsplash key set, tick "Auto-fetch a photo from Unsplash" to skip uploading.
+
+## Editing / deleting a tool
+From a tool's detail page → **Edit**. You can update any field and replace the photo (leave blank to keep current). At the bottom there's a "Danger zone" delete button — it's blocked if the tool is currently checked out.
+
+## Maintenance flow
+On any available tool's detail page, expand **Mark for maintenance**, enter a reason, submit. The tool moves to maintenance and stays out of circulation until someone hits **Mark serviced**. On return, a "Tool is damaged" checkbox does the same in one step and copies the return note as the maintenance reason.
+
+## Overdue
+Configure `OVERDUE_DAYS` in `.env` (default 14). Once an open checkout passes that age:
+- The tool's card shows a red "overdue · Nd" badge
+- The detail page banner turns red and shows days out vs max
+- The dashboard shows an "overdue" count pill and an "overdue only" filter button
 
 ## Removing a member
 Header → **Members** → **Remove**. Members with any checkout history are kept (button disabled) so the audit log stays intact.

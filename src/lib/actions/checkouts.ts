@@ -36,11 +36,18 @@ export async function returnTool(formData: FormData) {
   if (!toolId) throw new Error("Missing toolId.");
   const note = stringOrNull(formData.get("note"));
   const condition = stringOrNull(formData.get("condition"));
+  const damaged = formData.get("damaged") === "on";
 
   const open = await prisma.checkout.findFirst({
     where: { toolId, returnedAt: null },
   });
   if (!open) throw new Error("Tool isn't currently checked out.");
+
+  const nextStatus = damaged ? "MAINTENANCE" : "AVAILABLE";
+  const maintenanceReason = damaged
+    ? note ?? condition ?? "Reported damaged on return."
+    : null;
+  const maintenanceStartedAt = damaged ? new Date() : null;
 
   await prisma.$transaction([
     prisma.checkout.update({
@@ -49,11 +56,16 @@ export async function returnTool(formData: FormData) {
         returnedAt: new Date(),
         returnNote: note,
         returnCondition: condition,
+        damageReported: damaged,
       },
     }),
     prisma.tool.update({
       where: { id: toolId },
-      data: { status: "AVAILABLE" },
+      data: {
+        status: nextStatus,
+        maintenanceReason,
+        maintenanceStartedAt,
+      },
     }),
   ]);
 

@@ -26,13 +26,7 @@ export function CheckoutPanel({
     );
   }
 
-  if (status === "MAINTENANCE") {
-    return (
-      <div className="rounded-lg border border-white/10 bg-white/[0.02] p-3 text-sm text-zinc-300">
-        This tool is in maintenance — no checkouts available.
-      </div>
-    );
-  }
+  if (status === "MAINTENANCE") return null;
 
   if (status === "AVAILABLE") {
     return (
@@ -75,6 +69,17 @@ export function CheckoutPanel({
         placeholder="optional note"
         className={inputCls}
       />
+      <label className="flex cursor-pointer items-start gap-2 rounded-md border border-red-500/20 bg-red-500/[0.04] p-2.5 text-xs">
+        <input
+          type="checkbox"
+          name="damaged"
+          className="mt-0.5 h-3.5 w-3.5 accent-red-500"
+        />
+        <span className="text-zinc-300">
+          <span className="font-medium text-red-200">Tool is damaged</span> —
+          route to maintenance instead of marking available.
+        </span>
+      </label>
       <button
         type="submit"
         className="w-full rounded-lg bg-amber-500 px-4 py-3 text-base font-semibold text-zinc-950 shadow-[0_0_0_1px_rgba(255,255,255,0.1)_inset,0_8px_28px_-8px_rgba(245,158,11,0.6)] transition hover:bg-amber-400 active:translate-y-px"

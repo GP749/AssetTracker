@@ -10,14 +10,17 @@ datasource db {
 }
 
 model Tool {
-  id          String     @id @default(cuid())
-  name        String
-  category    String
-  description String?
-  photoUrl    String?
-  status      ToolStatus @default(AVAILABLE)
-  createdAt   DateTime   @default(now())
-  checkouts   Checkout[]
+  id                   String     @id @default(cuid())
+  name                 String
+  category             String
+  description          String?
+  photoUrl             String?
+  location             String?
+  status               ToolStatus @default(AVAILABLE)
+  maintenanceReason    String?
+  maintenanceStartedAt DateTime?
+  createdAt            DateTime   @default(now())
+  checkouts            Checkout[]
 }
 
 model Member {
@@ -36,11 +39,13 @@ model Checkout {
   checkoutNote    String?
   returnNote      String?
   returnCondition String?
+  damageReported  Boolean   @default(false)
   tool            Tool      @relation(fields: [toolId], references: [id])
   member          Member    @relation(fields: [memberId], references: [id])
 
   @@index([toolId])
   @@index([memberId])
+  @@index([returnedAt])
 }
 
 enum ToolStatus {

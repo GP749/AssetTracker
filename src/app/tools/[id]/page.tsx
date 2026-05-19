@@ -4,8 +4,10 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { StatusBadge } from "@/components/StatusBadge";
 import { CheckoutPanel } from "@/components/CheckoutPanel";
+import { MaintenancePanel } from "@/components/MaintenancePanel";
 import { formatDateTime } from "@/lib/format";
 import { getCurrentMemberId } from "@/lib/session";
+import { isOverdue, daysSince, overdueDays } from "@/lib/overdue";
 
 export default async function ToolDetailPage({
   params,
@@ -28,22 +30,29 @@ export default async function ToolDetailPage({
   if (!tool) notFound();
 
   const open = tool.checkouts.find((c) => c.returnedAt === null);
+  const overdue = open ? isOverdue(open.checkedOutAt) : false;
+  const daysOut = open ? daysSince(open.checkedOutAt) : 0;
 
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
-        <Link
-          href="/"
-          className="text-sm text-zinc-400 hover:text-zinc-100"
-        >
+        <Link href="/" className="text-sm text-zinc-400 hover:text-zinc-100">
           ← Back to tools
         </Link>
-        <Link
-          href={`/tools/${tool.id}/label`}
-          className="rounded-md border border-white/10 bg-white/[0.02] px-3 py-1.5 text-xs font-medium text-zinc-200 hover:border-blue-500/40 hover:bg-white/[0.05] hover:text-white"
-        >
-          ◳ Print QR label →
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href={`/tools/${tool.id}/edit`}
+            className="rounded-md border border-white/10 bg-white/[0.02] px-3 py-1.5 text-xs font-medium text-zinc-200 hover:border-blue-500/40 hover:bg-white/[0.05] hover:text-white"
+          >
+            ✎ Edit
+          </Link>
+          <Link
+            href={`/tools/${tool.id}/label`}
+            className="rounded-md border border-white/10 bg-white/[0.02] px-3 py-1.5 text-xs font-medium text-zinc-200 hover:border-blue-500/40 hover:bg-white/[0.05] hover:text-white"
+          >
+            ◳ Print QR label →
+          </Link>
+        </div>
       </div>
 
       <div className="grid gap-6 sm:grid-cols-[minmax(0,1fr)_2fr]">
@@ -66,36 +75,75 @@ export default async function ToolDetailPage({
         </div>
 
         <div className="space-y-4">
-          <div className="font-mono text-[10px] uppercase tracking-[0.25em] text-blue-400">
-            {tool.category}
+          <div className="flex flex-wrap items-baseline gap-x-3 font-mono text-[10px] uppercase tracking-[0.25em]">
+            <span className="text-blue-400">{tool.category}</span>
+            {tool.location && (
+              <span className="text-zinc-500">▸ {tool.location}</span>
+            )}
           </div>
           <h1 className="text-3xl font-semibold tracking-tight">{tool.name}</h1>
           <div>
             <StatusBadge status={tool.status} size="md" />
           </div>
           {tool.description && (
-            <p className="text-zinc-300/90 leading-relaxed">
+            <p className="leading-relaxed text-zinc-300/90">
               {tool.description}
             </p>
           )}
 
           {open && (
-            <div className="rounded-lg border border-amber-500/30 bg-amber-500/[0.08] p-3 text-sm text-amber-200">
-              <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-amber-300/80">
-                currently.with
-              </span>
+            <div
+              className={`rounded-lg border p-3 text-sm ${
+                overdue
+                  ? "border-red-500/30 bg-red-500/[0.08] text-red-100"
+                  : "border-amber-500/30 bg-amber-500/[0.08] text-amber-200"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <span
+                  className={`font-mono text-[10px] uppercase tracking-[0.2em] ${
+                    overdue ? "text-red-300/80" : "text-amber-300/80"
+                  }`}
+                >
+                  {overdue ? "overdue" : "currently.with"}
+                </span>
+                <span className="num text-[10px] text-zinc-400">
+                  {daysOut}d out · max {overdueDays()}d
+                </span>
+              </div>
               <div className="mt-1">
-                <strong className="text-amber-100">{open.member.name}</strong>{" "}
-                <span className="text-amber-300/80">
+                <strong
+                  className={overdue ? "text-red-100" : "text-amber-100"}
+                >
+                  {open.member.name}
+                </strong>{" "}
+                <span
+                  className={
+                    overdue ? "text-red-300/80" : "text-amber-300/80"
+                  }
+                >
                   since {formatDateTime(open.checkedOutAt)}
                 </span>
               </div>
               {open.checkoutNote && (
-                <div className="mt-1.5 text-amber-200/80">
+                <div
+                  className={`mt-1.5 ${
+                    overdue ? "text-red-200/80" : "text-amber-200/80"
+                  }`}
+                >
                   &ldquo;{open.checkoutNote}&rdquo;
                 </div>
               )}
             </div>
+          )}
+
+          {tool.status === "MAINTENANCE" && (
+            <MaintenancePanel
+              toolId={tool.id}
+              status={tool.status}
+              reason={tool.maintenanceReason}
+              startedAt={tool.maintenanceStartedAt}
+            />
           )}
 
           <div className="pt-1">
@@ -107,6 +155,10 @@ export default async function ToolDetailPage({
               isCurrentMemberHolder={open?.memberId === currentMemberId}
             />
           </div>
+
+          {tool.status === "AVAILABLE" && (
+            <MaintenancePanel toolId={tool.id} status={tool.status} />
+          )}
         </div>
       </div>
 
@@ -151,10 +203,25 @@ export default async function ToolDetailPage({
                           {formatDateTime(c.returnedAt)}
                         </span>
                       ) : (
-                        <span className="text-amber-300">still out</span>
+                        <span
+                          className={
+                            isOverdue(c.checkedOutAt)
+                              ? "text-red-300"
+                              : "text-amber-300"
+                          }
+                        >
+                          {isOverdue(c.checkedOutAt)
+                            ? `overdue · ${daysSince(c.checkedOutAt)}d`
+                            : "still out"}
+                        </span>
                       )}
                     </td>
                     <td className="px-3 py-2.5 text-zinc-300">
+                      {c.damageReported && (
+                        <span className="mr-1 rounded border border-red-500/30 bg-red-500/10 px-1 py-px font-mono text-[9px] uppercase tracking-wider text-red-200">
+                          damaged
+                        </span>
+                      )}
                       {[c.checkoutNote, c.returnNote]
                         .filter(Boolean)
                         .join(" → ") || (
