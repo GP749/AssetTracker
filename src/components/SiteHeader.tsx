@@ -6,6 +6,7 @@ import { NavLink } from "./NavLink";
 
 const links: { href: string; label: string }[] = [
   { href: "/", label: "Tools" },
+  { href: "/insights", label: "Insights" },
   { href: "/scan", label: "Scan" },
   { href: "/tools/new", label: "Add" },
   { href: "/members", label: "Team" },
