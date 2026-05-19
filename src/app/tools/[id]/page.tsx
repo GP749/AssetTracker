@@ -31,12 +31,18 @@ export default async function ToolDetailPage({
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="flex items-center justify-between">
         <Link
           href="/"
           className="text-sm text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200"
         >
           ← Back to tools
+        </Link>
+        <Link
+          href={`/tools/${tool.id}/label`}
+          className="text-sm text-zinc-600 underline-offset-2 hover:text-zinc-900 hover:underline dark:text-zinc-400 dark:hover:text-zinc-200"
+        >
+          Print QR label →
         </Link>
       </div>
 
