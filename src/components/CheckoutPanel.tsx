@@ -20,9 +20,15 @@ export function CheckoutPanel({
 }: Props) {
   if (!hasMember) {
     return (
-      <div className="rounded-lg border border-white/10 bg-white/[0.02] p-3 text-sm text-zinc-300">
-        Pick yourself in the header above to check this tool out.
-      </div>
+      <a
+        href={`/login?next=/tools/${toolId}`}
+        className="flex items-center justify-between rounded-lg border border-blue-500/30 bg-blue-500/[0.08] p-3 text-sm text-blue-100 transition hover:bg-blue-500/[0.14]"
+      >
+        <span>Sign in to check this tool out.</span>
+        <span className="font-mono text-[10px] uppercase tracking-wider text-blue-300">
+          ▸ sign in
+        </span>
+      </a>
     );
   }
 

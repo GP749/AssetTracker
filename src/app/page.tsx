@@ -218,6 +218,58 @@ export default async function DashboardPage({
           })}
         </div>
       )}
+
+      <DataToolbar
+        params={{ q, status: statusParam, category, location, overdueOnly }}
+        filteredCount={tools.length}
+      />
+    </div>
+  );
+}
+
+function DataToolbar({
+  params,
+  filteredCount,
+}: {
+  params: {
+    q: string;
+    status: string;
+    category: string;
+    location: string;
+    overdueOnly: boolean;
+  };
+  filteredCount: number;
+}) {
+  const search = new URLSearchParams();
+  if (params.q) search.set("q", params.q);
+  if (params.status) search.set("status", params.status);
+  if (params.category) search.set("category", params.category);
+  if (params.location) search.set("location", params.location);
+  if (params.overdueOnly) search.set("overdue", "1");
+  const labelsHref = `/tools/labels${search.toString() ? "?" + search.toString() : ""}`;
+
+  const linkCls =
+    "inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-white/[0.02] px-3 py-1.5 text-xs text-zinc-300 transition hover:border-blue-500/40 hover:bg-white/[0.05] hover:text-white";
+
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-white/5 bg-white/[0.02] p-3">
+      <div className="font-mono text-[10px] uppercase tracking-[0.25em] text-zinc-500">
+        data.tools
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <a href={labelsHref} className={linkCls}>
+          ◳ Print labels ({filteredCount})
+        </a>
+        <a href="/tools/import" className={linkCls}>
+          ⤒ Import CSV
+        </a>
+        <a href="/api/export/tools.csv" className={linkCls} download>
+          ⤓ Export tools.csv
+        </a>
+        <a href="/api/export/checkouts.csv" className={linkCls} download>
+          ⤓ Export checkouts.csv
+        </a>
+      </div>
     </div>
   );
 }

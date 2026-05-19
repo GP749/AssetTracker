@@ -1,7 +1,5 @@
 import Link from "next/link";
-import { cookies } from "next/headers";
-import { prisma } from "@/lib/db";
-import { MemberPicker } from "./MemberPicker";
+import { AuthWidget } from "./AuthWidget";
 import { NavLink } from "./NavLink";
 
 const links: { href: string; label: string }[] = [
@@ -12,16 +10,7 @@ const links: { href: string; label: string }[] = [
   { href: "/members", label: "Team" },
 ];
 
-export async function SiteHeader() {
-  const [members, jar] = await Promise.all([
-    prisma.member.findMany({
-      orderBy: { name: "asc" },
-      select: { id: true, name: true },
-    }),
-    cookies(),
-  ]);
-  const initial = jar.get("memberId")?.value ?? "";
-
+export function SiteHeader() {
   return (
     <header className="sticky top-0 z-20 border-b border-white/5 bg-[#08080a]/70 backdrop-blur-xl">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3">
@@ -43,7 +32,7 @@ export async function SiteHeader() {
             ))}
           </nav>
         </div>
-        <MemberPicker members={members} initial={initial} />
+        <AuthWidget />
       </div>
     </header>
   );

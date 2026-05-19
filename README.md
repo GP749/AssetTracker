@@ -114,11 +114,20 @@ src/
 ```
 
 ## Auth model
-There is no real auth in v1. The site header has a "who are you?" dropdown. Picking yourself sets:
-- `localStorage["assetTracker.memberId"]` (per-device persistence)
-- a `memberId` cookie (so server actions know who you are)
+Username + password login. Browse is public — anyone on the LAN can see the inventory, scan QRs, view tool details, and view insights. **Any action that mutates data** (check-out, return, add tool, edit, delete, member management, CSV import) requires a signed-in member.
 
-Server actions for check-out / return read the cookie. If no member is selected, the check-out button on the tool page tells you to pick yourself first.
+- **Sessions** are signed cookies (HMAC-SHA256 over `<memberId>.<exp>` with `AUTH_SECRET`). Default lifetime 30 days, `HttpOnly`, `SameSite=Lax`.
+- **Passwords** are hashed with `scrypt` (Node's built-in, no extra deps) + a random per-user salt.
+- **Roles** are flat — every signed-in member can do everything (matches the "trusted small team" model).
+- **Seeded credentials**: usernames are the first names lowercased — `alex`, `jamie`, `kim`, `morgan`, `sam`. Default password for all five is `changeme`. Change it on the **Team** page after signing in.
+- **Adding members** is done on `/members` once signed in (name + username + password). The signed-in member can't remove themselves; members with checkout history are kept to preserve the audit log.
+
+### `AUTH_SECRET`
+A 32+ character random string used to sign session cookies. Generate one with:
+```
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+The seed will work with any value; existing sessions invalidate whenever you change it.
 
 ## Adding a tool
 Header → **Add** → fill name + category + location, optionally upload a photo (JPG/PNG/WEBP/GIF, max 8 MB). Photos land in `public/uploads/<uuid>.<ext>` and the DB stores the relative URL. With an Unsplash key set, tick "Auto-fetch a photo from Unsplash" to skip uploading.

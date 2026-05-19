@@ -24,10 +24,12 @@ model Tool {
 }
 
 model Member {
-  id        String     @id @default(cuid())
-  name      String
-  createdAt DateTime   @default(now())
-  checkouts Checkout[]
+  id           String     @id @default(cuid())
+  name         String
+  username     String     @unique
+  passwordHash String
+  createdAt    DateTime   @default(now())
+  checkouts    Checkout[]
 }
 
 model Checkout {

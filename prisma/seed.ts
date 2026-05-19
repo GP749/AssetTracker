@@ -3,6 +3,7 @@ import "dotenv/config";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import { hasUnsplashKey, searchPhoto } from "../src/lib/unsplash";
+import { hashPassword } from "../src/lib/auth";
 
 const url = process.env.DATABASE_URL ?? "file:./prisma/dev.db";
 const filePath = url.startsWith("file:") ? url.slice(5) : url;
@@ -22,6 +23,7 @@ type SeedTool = {
   query: string; // Unsplash search query
 };
 
+const DEFAULT_PASSWORD = "changeme";
 const MEMBERS = ["Alex", "Jamie", "Kim", "Morgan", "Sam"];
 
 const TOOLS: SeedTool[] = [
@@ -212,9 +214,14 @@ async function main() {
   await prisma.tool.deleteMany();
   await prisma.member.deleteMany();
 
-  console.log(`  Inserting ${MEMBERS.length} members…`);
+  console.log(`  Inserting ${MEMBERS.length} members (default password "${DEFAULT_PASSWORD}")…`);
+  const passwordHash = hashPassword(DEFAULT_PASSWORD);
   await prisma.member.createMany({
-    data: MEMBERS.map((name) => ({ name })),
+    data: MEMBERS.map((name) => ({
+      name,
+      username: name.toLowerCase(),
+      passwordHash,
+    })),
   });
 
   const photos = await fetchPhotos();

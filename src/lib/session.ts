@@ -1,14 +1,17 @@
-import { cookies } from "next/headers";
-import { prisma } from "./db";
+/**
+ * Session helpers. Delegates to lib/auth for cookie signing/verification,
+ * and adds Prisma lookups for the current member.
+ */
 
-const COOKIE_NAME = "memberId";
+import { prisma } from "./db";
+import { getSessionMemberId } from "./auth";
 
 export async function getCurrentMember() {
-  const id = (await cookies()).get(COOKIE_NAME)?.value;
+  const id = await getSessionMemberId();
   if (!id) return null;
   return prisma.member.findUnique({ where: { id } });
 }
 
 export async function getCurrentMemberId(): Promise<string | null> {
-  return (await cookies()).get(COOKIE_NAME)?.value ?? null;
+  return getSessionMemberId();
 }

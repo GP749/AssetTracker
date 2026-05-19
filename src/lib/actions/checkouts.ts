@@ -2,13 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
-import { getCurrentMemberId } from "@/lib/session";
+import { requireSession } from "@/lib/auth";
 
 export async function checkoutTool(formData: FormData) {
   const toolId = String(formData.get("toolId") ?? "");
   if (!toolId) throw new Error("Missing toolId.");
-  const memberId = await getCurrentMemberId();
-  if (!memberId) throw new Error("Pick yourself in the header first.");
+  const memberId = await requireSession();
   const note = stringOrNull(formData.get("note"));
 
   const tool = await prisma.tool.findUnique({ where: { id: toolId } });
@@ -32,6 +31,7 @@ export async function checkoutTool(formData: FormData) {
 }
 
 export async function returnTool(formData: FormData) {
+  await requireSession();
   const toolId = String(formData.get("toolId") ?? "");
   if (!toolId) throw new Error("Missing toolId.");
   const note = stringOrNull(formData.get("note"));

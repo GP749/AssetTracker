@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { editTool, deleteTool } from "@/lib/actions/tools";
+import { getCurrentMemberId } from "@/lib/session";
 
 const inputCls =
   "w-full rounded-md border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-blue-500/50 focus:outline-none focus:ring-1 focus:ring-blue-500/30";
@@ -12,6 +13,7 @@ export default async function EditToolPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  if (!(await getCurrentMemberId())) redirect(`/login?next=/tools/${id}/edit`);
   const tool = await prisma.tool.findUnique({ where: { id } });
   if (!tool) notFound();
 

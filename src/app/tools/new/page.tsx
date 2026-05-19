@@ -1,11 +1,14 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { createTool } from "@/lib/actions/tools";
 import { hasUnsplashKey } from "@/lib/unsplash";
+import { getCurrentMemberId } from "@/lib/session";
 
 const inputCls =
   "w-full rounded-md border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-blue-500/50 focus:outline-none focus:ring-1 focus:ring-blue-500/30";
 
-export default function NewToolPage() {
+export default async function NewToolPage() {
+  if (!(await getCurrentMemberId())) redirect("/login?next=/tools/new");
   const canUnsplash = hasUnsplashKey();
 
   return (

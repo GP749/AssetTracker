@@ -5,8 +5,10 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { savePhoto } from "@/lib/upload";
 import { searchPhoto } from "@/lib/unsplash";
+import { requireSession } from "@/lib/auth";
 
 export async function createTool(formData: FormData) {
+  await requireSession();
   const name = String(formData.get("name") ?? "").trim();
   const category = String(formData.get("category") ?? "").trim();
   const description =
@@ -38,6 +40,7 @@ export async function createTool(formData: FormData) {
 }
 
 export async function editTool(formData: FormData) {
+  await requireSession();
   const id = String(formData.get("id") ?? "");
   if (!id) throw new Error("Missing tool id.");
   const name = String(formData.get("name") ?? "").trim();
@@ -72,6 +75,7 @@ export async function editTool(formData: FormData) {
 }
 
 export async function deleteTool(formData: FormData) {
+  await requireSession();
   const id = String(formData.get("id") ?? "");
   if (!id) throw new Error("Missing tool id.");
   const openCount = await prisma.checkout.count({
@@ -88,6 +92,7 @@ export async function deleteTool(formData: FormData) {
 }
 
 export async function markForMaintenance(formData: FormData) {
+  await requireSession();
   const id = String(formData.get("toolId") ?? "");
   const reason = String(formData.get("reason") ?? "").trim() || null;
   if (!id) throw new Error("Missing tool id.");
@@ -110,6 +115,7 @@ export async function markForMaintenance(formData: FormData) {
 }
 
 export async function completeMaintenance(formData: FormData) {
+  await requireSession();
   const id = String(formData.get("toolId") ?? "");
   if (!id) throw new Error("Missing tool id.");
   await prisma.tool.update({
