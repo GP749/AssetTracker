@@ -1,0 +1,50 @@
+// Prisma schema for Asset Tracker. Docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Tool {
+  id          String     @id @default(cuid())
+  name        String
+  category    String
+  description String?
+  photoUrl    String?
+  status      ToolStatus @default(AVAILABLE)
+  createdAt   DateTime   @default(now())
+  checkouts   Checkout[]
+}
+
+model Member {
+  id        String     @id @default(cuid())
+  name      String
+  createdAt DateTime   @default(now())
+  checkouts Checkout[]
+}
+
+model Checkout {
+  id              String    @id @default(cuid())
+  toolId          String
+  memberId        String
+  checkedOutAt    DateTime  @default(now())
+  returnedAt      DateTime?
+  checkoutNote    String?
+  returnNote      String?
+  returnCondition String?
+  tool            Tool      @relation(fields: [toolId], references: [id])
+  member          Member    @relation(fields: [memberId], references: [id])
+
+  @@index([toolId])
+  @@index([memberId])
+}
+
+enum ToolStatus {
+  AVAILABLE
+  CHECKED_OUT
+  MAINTENANCE
+}
