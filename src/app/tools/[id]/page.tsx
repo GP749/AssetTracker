@@ -3,7 +3,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { StatusBadge } from "@/components/StatusBadge";
+import { CheckoutPanel } from "@/components/CheckoutPanel";
 import { formatDateTime } from "@/lib/format";
+import { getCurrentMemberId } from "@/lib/session";
 
 export default async function ToolDetailPage({
   params,
@@ -11,15 +13,18 @@ export default async function ToolDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const tool = await prisma.tool.findUnique({
-    where: { id },
-    include: {
-      checkouts: {
-        orderBy: { checkedOutAt: "desc" },
-        include: { member: true },
+  const [tool, currentMemberId] = await Promise.all([
+    prisma.tool.findUnique({
+      where: { id },
+      include: {
+        checkouts: {
+          orderBy: { checkedOutAt: "desc" },
+          include: { member: true },
+        },
       },
-    },
-  });
+    }),
+    getCurrentMemberId(),
+  ]);
   if (!tool) notFound();
 
   const open = tool.checkouts.find((c) => c.returnedAt === null);
@@ -79,8 +84,16 @@ export default async function ToolDetailPage({
             </div>
           )}
 
-          <div className="pt-2 text-sm text-zinc-500 dark:text-zinc-400">
-            Check-out actions land in the next phase.
+          <div className="pt-2">
+            <CheckoutPanel
+              toolId={tool.id}
+              status={tool.status}
+              hasMember={Boolean(currentMemberId)}
+              currentHolderName={open?.member.name}
+              isCurrentMemberHolder={
+                open?.memberId === currentMemberId
+              }
+            />
           </div>
         </div>
       </div>

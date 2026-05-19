@@ -1,0 +1,68 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { prisma } from "@/lib/db";
+import { getCurrentMemberId } from "@/lib/session";
+
+export async function checkoutTool(formData: FormData) {
+  const toolId = String(formData.get("toolId") ?? "");
+  if (!toolId) throw new Error("Missing toolId.");
+  const memberId = await getCurrentMemberId();
+  if (!memberId) throw new Error("Pick yourself in the header first.");
+  const note = stringOrNull(formData.get("note"));
+
+  const tool = await prisma.tool.findUnique({ where: { id: toolId } });
+  if (!tool) throw new Error("Tool not found.");
+  if (tool.status !== "AVAILABLE") {
+    throw new Error(`Tool is currently ${tool.status.toLowerCase()}.`);
+  }
+
+  await prisma.$transaction([
+    prisma.checkout.create({
+      data: { toolId, memberId, checkoutNote: note },
+    }),
+    prisma.tool.update({
+      where: { id: toolId },
+      data: { status: "CHECKED_OUT" },
+    }),
+  ]);
+
+  revalidatePath(`/tools/${toolId}`);
+  revalidatePath("/");
+}
+
+export async function returnTool(formData: FormData) {
+  const toolId = String(formData.get("toolId") ?? "");
+  if (!toolId) throw new Error("Missing toolId.");
+  const note = stringOrNull(formData.get("note"));
+  const condition = stringOrNull(formData.get("condition"));
+
+  const open = await prisma.checkout.findFirst({
+    where: { toolId, returnedAt: null },
+  });
+  if (!open) throw new Error("Tool isn't currently checked out.");
+
+  await prisma.$transaction([
+    prisma.checkout.update({
+      where: { id: open.id },
+      data: {
+        returnedAt: new Date(),
+        returnNote: note,
+        returnCondition: condition,
+      },
+    }),
+    prisma.tool.update({
+      where: { id: toolId },
+      data: { status: "AVAILABLE" },
+    }),
+  ]);
+
+  revalidatePath(`/tools/${toolId}`);
+  revalidatePath("/");
+}
+
+function stringOrNull(v: FormDataEntryValue | null): string | null {
+  if (typeof v !== "string") return null;
+  const trimmed = v.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
