@@ -18,7 +18,6 @@ export function MemberPicker({
   const [memberId, setMemberId] = useState(initial);
   const router = useRouter();
 
-  // Reconcile from localStorage on first mount in case the cookie was cleared.
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY) ?? "";
     if (stored && stored !== initial) {
@@ -43,17 +42,26 @@ export function MemberPicker({
     router.refresh();
   };
 
+  const me = members.find((m) => m.id === memberId);
+
   return (
-    <label className="flex items-center gap-2 text-sm">
-      <span className="hidden text-zinc-500 sm:inline dark:text-zinc-400">
-        You:
+    <label className="group flex items-center gap-2 rounded-md border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs text-zinc-300 hover:border-white/20">
+      <span
+        className={`h-1.5 w-1.5 rounded-full ${
+          me
+            ? "bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)]"
+            : "bg-zinc-500"
+        }`}
+      />
+      <span className="hidden text-zinc-500 sm:inline">
+        {me ? "you" : "anon"}
       </span>
       <select
         value={memberId}
         onChange={onChange}
-        className="rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm focus:border-zinc-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-950"
+        className="appearance-none bg-transparent pr-1 text-sm text-zinc-100 focus:outline-none"
       >
-        <option value="">Who are you?</option>
+        <option value="">— pick member —</option>
         {members.map((m) => (
           <option key={m.id} value={m.id}>
             {m.name}

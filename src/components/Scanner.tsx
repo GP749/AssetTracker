@@ -70,26 +70,44 @@ export function Scanner() {
 
   return (
     <div className="space-y-3">
-      <div
-        id={ELEMENT_ID}
-        className="aspect-square w-full max-w-md overflow-hidden rounded-lg border border-zinc-300 bg-black dark:border-zinc-700"
-      />
-      {stage === "starting" && (
-        <div className="text-sm text-zinc-500 dark:text-zinc-400">
-          Starting camera…
+      <div className="relative">
+        <div
+          id={ELEMENT_ID}
+          className="aspect-square w-full overflow-hidden rounded-xl border border-white/10 bg-black"
+        />
+        {/* Corner brackets overlay */}
+        <div className="pointer-events-none absolute inset-3">
+          <Corner pos="top-0 left-0" rot="" />
+          <Corner pos="top-0 right-0" rot="rotate-90" />
+          <Corner pos="bottom-0 right-0" rot="rotate-180" />
+          <Corner pos="bottom-0 left-0" rot="-rotate-90" />
         </div>
-      )}
-      {stage === "scanning" && (
-        <div className="text-sm text-zinc-500 dark:text-zinc-400">
-          Point at a tool&apos;s QR code.
-        </div>
-      )}
+      </div>
+      <div className="font-mono text-[11px] uppercase tracking-wider">
+        {stage === "starting" && (
+          <span className="text-zinc-400">▸ starting camera…</span>
+        )}
+        {stage === "scanning" && (
+          <span className="text-emerald-400">
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)]" />{" "}
+            ready · point at a label
+          </span>
+        )}
+      </div>
       {stage === "error" && error && (
-        <div className="rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-800 dark:border-red-800 dark:bg-red-950/50 dark:text-red-200">
+        <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200">
           {error}
         </div>
       )}
     </div>
+  );
+}
+
+function Corner({ pos, rot }: { pos: string; rot: string }) {
+  return (
+    <div
+      className={`absolute ${pos} ${rot} h-6 w-6 border-t-2 border-l-2 border-blue-400`}
+    />
   );
 }
 
@@ -98,7 +116,6 @@ function extractToolId(text: string): string | null {
   if (!trimmed) return null;
   const pathMatch = trimmed.match(/\/tools\/([a-zA-Z0-9_-]+)/);
   if (pathMatch) return pathMatch[1];
-  // Bare CUID-looking id (no slashes, reasonable length)
   if (/^[a-zA-Z0-9_-]{8,}$/.test(trimmed)) return trimmed;
   return null;
 }

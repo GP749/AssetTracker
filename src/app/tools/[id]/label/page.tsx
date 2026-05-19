@@ -26,24 +26,31 @@ export default async function ToolLabelPage({
       <style>{`
         @page { size: 60mm 40mm; margin: 2mm; }
         @media print {
-          html, body { background: white !important; }
+          html, body { background: white !important; color: black !important; }
+          html { background-image: none !important; }
           .no-print { display: none !important; }
-          .label-card { border: none !important; box-shadow: none !important; padding: 0 !important; }
+          .label-card {
+            border: none !important;
+            background: white !important;
+            color: black !important;
+            padding: 0 !important;
+          }
+          .label-card * { color: black !important; }
         }
       `}</style>
 
-      <div className="mx-auto max-w-md space-y-4">
+      <div className="mx-auto max-w-md space-y-5">
         <div className="no-print flex items-center justify-between">
           <Link
             href={`/tools/${tool.id}`}
-            className="text-sm text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200"
+            className="text-sm text-zinc-400 hover:text-zinc-100"
           >
             ← Back to tool
           </Link>
-          <PrintButton label="Print label" />
+          <PrintButton label="◳ Print label" />
         </div>
 
-        <div className="label-card rounded-md border border-zinc-300 bg-white p-3 text-zinc-900 dark:border-zinc-700">
+        <div className="label-card rounded-xl border border-white/10 bg-white p-3 text-zinc-900">
           <div className="flex items-center gap-3">
             <img
               src={`/api/qr/${tool.id}`}
@@ -56,23 +63,21 @@ export default async function ToolLabelPage({
               <div className="truncate text-[10pt] font-semibold leading-tight">
                 {tool.name}
               </div>
-              <div className="truncate text-[7pt] uppercase tracking-wide text-zinc-600">
+              <div className="truncate font-mono text-[7pt] uppercase tracking-wide text-zinc-600">
                 {tool.category}
               </div>
             </div>
           </div>
         </div>
 
-        <div className="no-print rounded-md border border-zinc-200 bg-zinc-50 p-3 text-xs text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400">
+        <div className="no-print rounded-lg border border-white/5 bg-white/[0.02] p-3 font-mono text-[11px] text-zinc-400">
           <div>
-            QR encodes:{" "}
-            <code className="break-all rounded bg-zinc-100 px-1 py-0.5 dark:bg-zinc-800">
-              {targetUrl}
-            </code>
+            <span className="text-zinc-500">qr.encodes</span>{" "}
+            <span className="break-all text-blue-300">{targetUrl}</span>
           </div>
-          <div className="mt-1">
-            Change the base URL by editing <code>APP_BASE_URL</code> in{" "}
-            <code>.env</code> and restarting the dev server.
+          <div className="mt-1.5 text-zinc-500">
+            change via <span className="text-zinc-300">APP_BASE_URL</span> in{" "}
+            <span className="text-zinc-300">.env</span>, restart dev server.
           </div>
         </div>
       </div>

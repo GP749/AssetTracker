@@ -8,6 +8,9 @@ type Props = {
   isCurrentMemberHolder?: boolean;
 };
 
+const inputCls =
+  "w-full rounded-md border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-blue-500/50 focus:outline-none focus:ring-1 focus:ring-blue-500/30";
+
 export function CheckoutPanel({
   toolId,
   status,
@@ -17,7 +20,7 @@ export function CheckoutPanel({
 }: Props) {
   if (!hasMember) {
     return (
-      <div className="rounded-md border border-zinc-300 bg-zinc-50 p-3 text-sm text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300">
+      <div className="rounded-lg border border-white/10 bg-white/[0.02] p-3 text-sm text-zinc-300">
         Pick yourself in the header above to check this tool out.
       </div>
     );
@@ -25,7 +28,7 @@ export function CheckoutPanel({
 
   if (status === "MAINTENANCE") {
     return (
-      <div className="rounded-md border border-zinc-300 bg-zinc-50 p-3 text-sm text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300">
+      <div className="rounded-lg border border-white/10 bg-white/[0.02] p-3 text-sm text-zinc-300">
         This tool is in maintenance — no checkouts available.
       </div>
     );
@@ -38,14 +41,14 @@ export function CheckoutPanel({
         <textarea
           name="note"
           rows={2}
-          placeholder="Optional note (e.g. taking it to the workshop)"
-          className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-950"
+          placeholder="optional note (e.g. taking it to the workshop)"
+          className={inputCls}
         />
         <button
           type="submit"
-          className="w-full rounded-md bg-emerald-600 px-4 py-3 text-base font-semibold text-white shadow-sm hover:bg-emerald-700 active:bg-emerald-800"
+          className="w-full rounded-lg bg-emerald-500 px-4 py-3 text-base font-semibold text-zinc-950 shadow-[0_0_0_1px_rgba(255,255,255,0.1)_inset,0_8px_28px_-8px_rgba(16,185,129,0.6)] transition hover:bg-emerald-400 active:translate-y-px"
         >
-          Check out
+          ▸ Check out
         </button>
       </form>
     );
@@ -56,27 +59,27 @@ export function CheckoutPanel({
     <form action={returnTool} className="space-y-3">
       <input type="hidden" name="toolId" value={toolId} />
       {!isCurrentMemberHolder && currentHolderName && (
-        <div className="rounded-md border border-amber-200 bg-amber-50 p-2 text-xs text-amber-900 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-100">
+        <div className="rounded-md border border-amber-500/30 bg-amber-500/10 p-2 text-xs text-amber-200">
           Returning on behalf of {currentHolderName}.
         </div>
       )}
       <input
         type="text"
         name="condition"
-        placeholder="Condition (good, broken, missing battery…)"
-        className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-950"
+        placeholder="condition (good, broken, missing battery…)"
+        className={inputCls}
       />
       <textarea
         name="note"
         rows={2}
-        placeholder="Optional note"
-        className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none dark:border-zinc-700 dark:bg-zinc-950"
+        placeholder="optional note"
+        className={inputCls}
       />
       <button
         type="submit"
-        className="w-full rounded-md bg-amber-600 px-4 py-3 text-base font-semibold text-white shadow-sm hover:bg-amber-700 active:bg-amber-800"
+        className="w-full rounded-lg bg-amber-500 px-4 py-3 text-base font-semibold text-zinc-950 shadow-[0_0_0_1px_rgba(255,255,255,0.1)_inset,0_8px_28px_-8px_rgba(245,158,11,0.6)] transition hover:bg-amber-400 active:translate-y-px"
       >
-        Return
+        ▸ Return
       </button>
     </form>
   );
